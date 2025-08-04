@@ -38,7 +38,6 @@ map_data = st_folium(m, width=700, height=500)
 lat, lon = None, None
 use_coordinates_directly = False
 
-
 if map_data and map_data.get("last_clicked"):
     lat = map_data["last_clicked"]["lat"]
     lon = map_data["last_clicked"]["lng"]
@@ -329,7 +328,7 @@ sns.lineplot(
 )
 
 # Make it "happy" and clean
-ax.set_title("🌞 Upcoming Weather vs Historical Avg", fontsize=18, fontweight='bold', color='#2C3E50')
+ax.set_title("Upcoming Weather vs Historical Avg", fontsize=18, fontweight='bold', color='#2C3E50')
 ax.set_ylabel(ylabel, fontsize=14)
 ax.set_xlabel("Date", fontsize=14)
 ax.tick_params(axis='x', labelsize=12)
