@@ -1,20 +1,16 @@
 # import modules
-import string
 import streamlit as st
 import pandas as pd
 import seaborn as sns
 import datetime as dt
 import meteostat as ms
 import requests
-import os
-import json
 import folium
 import matplotlib.pyplot as plt
 from collections import defaultdict, Counter
-from dotenv import load_dotenv
 from streamlit_folium import st_folium
 
-# add url addresses
+# Add URL Addresses
 appid = "9c52e999ca8280b5b1b549f0bf56dc82"
 curr_weather_url = "https://api.openweathermap.org/data/2.5/weather"
 forecast_url = "https://api.openweathermap.org/data/2.5/forecast"
@@ -25,7 +21,7 @@ st.set_page_config(page_title="Weather App", page_icon="🌤️", layout="center
 st.markdown("<h1 style='text-align: center; font-size: 36px;'>🌦️ Welcome to DS20 Weather Project!</h1>",unsafe_allow_html=True)
 st.markdown("<h4 style='text-align: center; font-size: 20px;'>Enter a city name or select a location on the map to get weather updates.</h4>",unsafe_allow_html=True)
 
-# --- Input Options ---
+# Input Options
 st.markdown("<h4 style='text-align: center;'>📍 Enter City Name</h4>", unsafe_allow_html=True)
 city_name = st.text_input("", key="city_name_input")
 st.markdown("<h4 style='text-align: center;'>🗺️ Or choose a location on the map</h4>", unsafe_allow_html=True)
@@ -34,7 +30,7 @@ m = folium.Map(location=default_location, zoom_start=6)
 folium.Marker(location=default_location, popup="Tel Aviv").add_to(m)
 map_data = st_folium(m, width=700, height=500)
 
-# --- Determine Coordinates ---
+# Determine Coordinates
 lat, lon = None, None
 use_coordinates_directly = False
 
@@ -43,7 +39,7 @@ if map_data and map_data.get("last_clicked"):
     lon = map_data["last_clicked"]["lng"]
     st.success(f"📌 Location Selected: Latitude {lat:.2f}, Longitude {lon:.2f}")
 
-# Only proceed if city_name is entered
+# Only Proceed if city_name is Entered
 elif city_name:
     params_location = {"q": city_name, "limit": 1, "appid": appid}
     coordinates = requests.get(coordinates_url, params=params_location)
@@ -62,7 +58,7 @@ else:
 params_imperial = {"lat": lat, "lon": lon, 'units': 'imperial', "appid": appid}
 params_metric = {"lat": lat, "lon": lon, 'units': 'metric', "appid": appid}
 
-# current weather data
+# Current Weather Data
 curr_weather_imperial = requests.get(curr_weather_url,params=params_imperial)
 curr_weather_imperial.raise_for_status()
 curr_weather_imperial_post = curr_weather_imperial.json()
@@ -70,7 +66,7 @@ curr_weather_metric = requests.get(curr_weather_url,params=params_metric)
 curr_weather_metric.raise_for_status()
 curr_weather_metric_post = curr_weather_metric.json()
 
-# weather forecast data
+# Weather Forecast Data
 forecast_imperial = requests.get(forecast_url,params=params_imperial)
 forecast_imperial.raise_for_status()
 forecast_imperial_post = forecast_imperial.json()
@@ -78,13 +74,13 @@ forecast_metric = requests.get(forecast_url,params=params_metric)
 forecast_metric.raise_for_status()
 forecast_metric_post = forecast_metric.json()
 
-# add time conversion for local time
+# Add Time Conversion for Local Time
 utc_timestamp = curr_weather_imperial_post['dt']
 timezone_offset = curr_weather_imperial_post['timezone']
 utc_time = dt.datetime.fromtimestamp(utc_timestamp, dt.UTC)
 local_time = utc_time + dt.timedelta(seconds=timezone_offset)
 
-# summarize main weather figures
+# Summarize Main Weather Figures
 curr_weather_details = {
     'Country': curr_weather_imperial_post['sys']['country'],
     'City': curr_weather_imperial_post['name'],
@@ -109,15 +105,15 @@ curr_weather_metric = {
     'Local_Time': local_time.strftime('%H:%M')
 }
 
-# summarize daily forecasts - imperial
+# Summarize Daily Forecasts - Imperial Units
 
-# create a list of dates
+# Create a List of Dates
 date_list_imperial = defaultdict(list)
 for item in forecast_imperial_post['list']:
     date = dt.datetime.strptime(item['dt_txt'], '%Y-%m-%d %H:%M:%S').date()
     date_list_imperial[date].append(item)
 
-# populate forecast data items
+# Populate Forecast Data Items
 daily_summary_imperial = []
 for date, items in date_list_imperial.items():
     Temp_F_Min = [item['main']['temp_min'] for item in items]
@@ -126,7 +122,7 @@ for date, items in date_list_imperial.items():
     Weather_Type = [item['weather'][0]['main'] for item in items]
     Icon = [item['weather'][0]['icon'] for item in items]
 
-# aggregate forecast data to get min, max, average per day
+# Aggregate Forecast Data to Get Min, Max, Average per Day
     daily_imperial = {
         'Date': date.strftime('%m/%d/%Y'),
         'Temp_F_Min': int(round(min(Temp_F_Min))),
@@ -138,15 +134,15 @@ for date, items in date_list_imperial.items():
 
     daily_summary_imperial.append(daily_imperial)
 
-# summarize daily forecasts - metric
+# Summarize Daily Forecasts - Metric Units
 
-# create a list of dates
+# Create a List of Dates
 date_list_metric = defaultdict(list)
 for item in forecast_metric_post['list']:
     date = dt.datetime.strptime(item['dt_txt'], '%Y-%m-%d %H:%M:%S').date()
     date_list_metric[date].append(item)
 
-# populate forecast data items
+# Populate Forecast Data Items
 daily_summary_metric = []
 for date, items in date_list_metric.items():
     Temp_C_Min = [item['main']['temp_min'] for item in items]
@@ -155,7 +151,7 @@ for date, items in date_list_metric.items():
     Weather_Type = [item['weather'][0]['main'] for item in items]
     Icon = [item['weather'][0]['icon'] for item in items]
 
-# aggregate forecast data to get min, max, average per day
+# Aggregate Forecast Data to get Min, Max, Average per Day
     daily_metric = {
         'Date': date.strftime('%d/%m/%Y'),
         'Temp_C_Min': int(round(min(Temp_C_Min))),
@@ -167,7 +163,7 @@ for date, items in date_list_metric.items():
 
     daily_summary_metric.append(daily_metric)
 
-# Find nearest weather station
+# Find Nearest Weather Station
 stations = ms.Stations()
 stations = stations.nearby(lat, lon)
 station = stations.fetch(1)
@@ -198,9 +194,9 @@ else:
             'tavg_f': 'Temp_F_Avg'
         }, inplace=True)
 
-        # --- Weather Summary Visualization ---
+        # Weather Summary Visualization
 
-        # Unit selection
+        # Unit Selection
         unit_system = st.radio("🌡️ Select Unit System", ["Metric", "Imperial"])
         weather_data = curr_weather_metric if unit_system == "Metric" else curr_weather_imperial
 
@@ -208,19 +204,19 @@ else:
         icon_code = curr_weather_details['Icon']
         icon_url = f"http://openweathermap.org/img/wn/{icon_code}@2x.png"
 
-        # Display location and time
+        # Display Location and Time
         st.markdown(f"## 📍 {curr_weather_details['City']}, {curr_weather_details['Country']}")
         st.markdown(
             f"**🕒 Local Time:** {weather_data['Local_Time']} &nbsp;&nbsp; 📅 **Date:** {weather_data['Local_Date']}")
 
-        # Display weather icon and description
+        # Display Weather Icon and Description
         col_icon, col_desc = st.columns([1, 4])
         with col_icon:
             st.image(icon_url, width=80)
         with col_desc:
             st.markdown(f"### {curr_weather_details['Weather_Type'].capitalize()}")
 
-        # Create tiles for key metrics
+        # Create Tiles for Key Metrics
         if unit_system == "Metric":
             tile_data = {
                 "🌡️ Temperature": f"{weather_data['Temp_C']}°C",
@@ -236,11 +232,11 @@ else:
                 "💧 Humidity": curr_weather_details['Humidity']
             }
 
-        # Display tiles in columns
+        # Display Tiles in Columns
         st.markdown("### 🌟 Current Weather Summary")
         cols = st.columns(len(tile_data))
 
-        # Set a single darker background color for all tiles
+        # Set a Single Darker Background Color for All Tiles
         tile_color = "#34495E"  # A dark slate blue for a sleek look
         text_color = "#FFFFFF"  # White text for contrast
 
@@ -257,16 +253,16 @@ else:
                     """,
                     unsafe_allow_html=True
                 )
-# --- Forecast Section ---
+# Forecast Section
 st.markdown("### 📅 5-Day Forecast")
 
-# Choose the correct dataset
+# Choose the Correct Dataset According to Selected Unit
 forecast_data = daily_summary_metric if unit_system == "Metric" else daily_summary_imperial
 
-# Create columns for each day
+# Create Columns for Each Day
 forecast_cols = st.columns(len(forecast_data))
 
-# Loop through forecast data and display each day's summary
+# Loop Through Forecast Data and Display Each Day's Summary
 for i, day in enumerate(forecast_data):
     with forecast_cols[i]:
         icon_url = f"http://openweathermap.org/img/wn/{day['Icon']}@2x.png"
@@ -287,18 +283,18 @@ for i, day in enumerate(forecast_data):
             """,
             unsafe_allow_html=True
         )
-# Add spacing below forecast tiles
+
 st.markdown("<br><br>", unsafe_allow_html=True)
 
-# Prepare forecast DataFrame
+# Prepare Forecast DataFrame
 forecast_df = pd.DataFrame(forecast_data)
 forecast_df['Date'] = pd.to_datetime(forecast_df['Date'], format='%d/%m/%Y' if unit_system == 'Metric' else '%m/%d/%Y')
 forecast_df['month'] = forecast_df['Date'].dt.strftime('%m-%Y')
 
-# Merge with historical averages
+# Merge with Historical Averages from Meteostat
 merged_df = forecast_df.merge(df_agg.reset_index(), on='month', how='left')
 
-# Select and rename columns
+# Select and Rename Columns
 if unit_system == "Metric":
     plot_df = merged_df[['Date', 'Temp_C_Min', 'Temp_C_Max', 'Temp_C_Avg']].rename(
         columns={'Temp_C_Min': 'Min Temp', 'Temp_C_Max': 'Max Temp', 'Temp_C_Avg': 'Historical Avg'}
@@ -311,11 +307,9 @@ else:
     ylabel = "Temperature (°F)"
 
 plot_df = plot_df.melt(id_vars='Date', var_name='Type', value_name='Temperature')
-
-# Set a cheerful theme
 sns.set_theme(style="white", palette="pastel")
 
-# Create plot
+# Create Plot
 fig, ax = plt.subplots(figsize=(10, 5))
 sns.lineplot(
     data=plot_df,
@@ -327,7 +321,6 @@ sns.lineplot(
     linewidth=3
 )
 
-# Make it "happy" and clean
 ax.set_title("Upcoming Weather vs Historical Avg", fontsize=18, fontweight='bold', color='#2C3E50')
 ax.set_ylabel(ylabel, fontsize=14)
 ax.set_xlabel("Date", fontsize=14)
@@ -335,7 +328,7 @@ ax.tick_params(axis='x', labelsize=12)
 ax.tick_params(axis='y', labelsize=12)
 ax.legend(title="Temperature Type", fontsize=12, title_fontsize=13)
 
-# Remove gridlines
+# Remove Gridlines
 ax.grid(False)
 
 plt.xticks(rotation=45)
