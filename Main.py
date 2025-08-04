@@ -9,6 +9,7 @@ import requests
 import os
 import json
 import folium
+import matplotlib.pyplot as plt
 from collections import defaultdict, Counter
 from dotenv import load_dotenv
 from streamlit_folium import st_folium
@@ -287,6 +288,48 @@ for i, day in enumerate(forecast_data):
             """,
             unsafe_allow_html=True
         )
+# Add spacing below forecast tiles
+st.markdown("<br><br>", unsafe_allow_html=True)
 
+# Prepare forecast DataFrame
+forecast_df = pd.DataFrame(forecast_data)
+forecast_df['Date'] = pd.to_datetime(forecast_df['Date'], format='%d/%m/%Y' if unit_system == 'Metric' else '%m/%d/%Y')
+forecast_df['month'] = forecast_df['Date'].dt.strftime('%m-%Y')
 
+# Merge with historical averages
+merged_df = forecast_df.merge(df_agg.reset_index(), on='month', how='left')
 
+# Select and rename columns
+if unit_system == "Metric":
+    plot_df = merged_df[['Date', 'Temp_C_Min', 'Temp_C_Max', 'Temp_C_Avg']].rename(
+        columns={'Temp_C_Min': 'Min Temp', 'Temp_C_Max': 'Max Temp', 'Temp_C_Avg': 'Historical Avg'}
+    )
+    ylabel = "Temperature (°C)"
+else:
+    plot_df = merged_df[['Date', 'Temp_F_Min', 'Temp_F_Max', 'Temp_F_Avg']].rename(
+        columns={'Temp_F_Min': 'Min Temp', 'Temp_F_Max': 'Max Temp', 'Temp_F_Avg': 'Historical Avg'}
+    )
+    ylabel = "Temperature (°F)"
+
+plot_df = plot_df.melt(id_vars='Date', var_name='Type', value_name='Temperature')
+
+# Set a cheerful theme
+sns.set_theme(style="whitegrid", palette="pastel")
+
+# Create plot
+fig, ax = plt.subplots(figsize=(10, 5))
+sns.lineplot(data=plot_df, x='Date', y='Temperature', hue='Type', marker='o', ax=ax)
+
+# Make it "happy"
+ax.set_title("🌞 Upcoming Weather vs Historical Avg", fontsize=18, fontweight='bold', color='#2C3E50')
+ax.set_ylabel(ylabel, fontsize=14)
+ax.set_xlabel("Date", fontsize=14)
+ax.tick_params(axis='x', labelsize=12)
+ax.tick_params(axis='y', labelsize=12)
+ax.legend(title="Temperature Type", fontsize=12, title_fontsize=13)
+
+plt.xticks(rotation=45)
+plt.tight_layout()
+
+# Display in Streamlit
+st.pyplot(fig)
