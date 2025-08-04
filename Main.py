@@ -314,19 +314,30 @@ else:
 plot_df = plot_df.melt(id_vars='Date', var_name='Type', value_name='Temperature')
 
 # Set a cheerful theme
-sns.set_theme(style="whitegrid", palette="pastel")
+sns.set_theme(style="white", palette="pastel")
 
 # Create plot
 fig, ax = plt.subplots(figsize=(10, 5))
-sns.lineplot(data=plot_df, x='Date', y='Temperature', hue='Type', marker='o', ax=ax)
+sns.lineplot(
+    data=plot_df,
+    x='Date',
+    y='Temperature',
+    hue='Type',
+    marker='o',
+    ax=ax,
+    linewidth=3
+)
 
-# Make it "happy"
+# Make it "happy" and clean
 ax.set_title("🌞 Upcoming Weather vs Historical Avg", fontsize=18, fontweight='bold', color='#2C3E50')
 ax.set_ylabel(ylabel, fontsize=14)
 ax.set_xlabel("Date", fontsize=14)
 ax.tick_params(axis='x', labelsize=12)
 ax.tick_params(axis='y', labelsize=12)
 ax.legend(title="Temperature Type", fontsize=12, title_fontsize=13)
+
+# Remove gridlines
+ax.grid(False)
 
 plt.xticks(rotation=45)
 plt.tight_layout()
